@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Upload, Trash2, Save, Calendar, MapPin } from 'lucide-react';
-import type {Photo, Trip} from '../../types/index.ts';
+import React, {useEffect, useState} from 'react';
+import { X, Upload, Trash2, Save, Calendar, MapPin, ChevronLeft, ChevronRight } from 'lucide-react'; // Added ChevronLeft, ChevronRight for navigation
+import type { Photo, Trip } from '../../types/index.ts'; // Assuming GalleryImage is now available or defined in types.ts
 
 interface TripDetailProps {
     trip: Trip;
@@ -20,8 +20,9 @@ export const TripDetail: React.FC<TripDetailProps> = ({
                                                           onDeletePhoto,
                                                       }) => {
     const [editingPhoto, setEditingPhoto] = useState<string | null>(null);
-    // This new state tracks the TEXT of the caption being edited
     const [editingText, setEditingText] = useState<string>('');
+    const [selectedImage, setSelectedImage] = useState<Photo | null>(null); // State for fullscreen image
+
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (files) {
@@ -34,15 +35,12 @@ export const TripDetail: React.FC<TripDetailProps> = ({
         event.target.value = '';
     };
 
-
     const handleStartEditing = (photo: Photo) => {
         setEditingPhoto(photo.id);
         setEditingText(photo.description ?? '');
-        console.log(photo.id, editingText, editingPhoto);
     };
 
     const handleSaveDescription = (photoId: string) => {
-        alert('part two');
         onUpdatePhotoDescription(trip.id, photoId, editingText);
         setEditingPhoto(null); // Exit editing mode
     };
@@ -52,13 +50,57 @@ export const TripDetail: React.FC<TripDetailProps> = ({
         setEditingText('');
     };
 
+    // New functions for fullscreen gallery
+    const openFullscreen = (image: Photo): void => {
+        setSelectedImage(image);
+    };
+
+    const closeFullscreen = (): void => {
+        setSelectedImage(null);
+    };
+
+    const navigateFullscreen = (direction: 'prev' | 'next') => {
+        if (!selectedImage) return;
+
+        const currentIndex = trip.photos.findIndex(p => p.id === selectedImage.id);
+        let nextIndex: number;
+
+        if (direction === 'next') {
+            nextIndex = (currentIndex + 1) % trip.photos.length;
+        } else {
+            nextIndex = (currentIndex - 1 + trip.photos.length) % trip.photos.length;
+        }
+
+        setSelectedImage(trip.photos[nextIndex]);
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (selectedImage) { // Only active when fullscreen is open
+                if (event.key === 'ArrowLeft') {
+                    navigateFullscreen('prev');
+                } else if (event.key === 'ArrowRight') {
+                    navigateFullscreen('next');
+                } else if (event.key === 'Escape') {
+                    closeFullscreen();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedImage, navigateFullscreen, closeFullscreen]); // Depend on selectedImage, and the navigation functions
+
     return (
         <div className="min-h-screen p-6">
             <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="relative h-64">
                         <img
-                            src={trip.coverImage}
+                            src={trip.thumbnail ? trip.thumbnail.publicUrl : ''}
                             alt={trip.name}
                             className="w-full h-full object-cover"
                         />
@@ -140,7 +182,11 @@ export const TripDetail: React.FC<TripDetailProps> = ({
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {trip.photos.map((photo) => (
-                                        <div key={photo.id} className="group relative">
+                                        <div
+                                            key={photo.id}
+                                            className="group relative cursor-pointer" // Added cursor-pointer
+                                            onClick={() => openFullscreen(photo)} // Added onClick to open fullscreen
+                                        >
                                             <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                                                 <img
                                                     src={photo.publicUrl}
@@ -150,7 +196,10 @@ export const TripDetail: React.FC<TripDetailProps> = ({
                                             </div>
 
                                             <button
-                                                onClick={() => onDeletePhoto(trip.id, photo.id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation(); // Prevent opening fullscreen when deleting
+                                                    onDeletePhoto(trip.id, photo.id);
+                                                }}
                                                 className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                             >
                                                 <Trash2 size={14} />
@@ -186,7 +235,10 @@ export const TripDetail: React.FC<TripDetailProps> = ({
                                                 ) : (
                                                     <p
                                                         className="text-sm text-gray-600 cursor-pointer hover:text-blue-600"
-                                                        onClick={() => handleStartEditing(photo)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Prevent opening fullscreen when editing
+                                                            handleStartEditing(photo);
+                                                        }}
                                                     >
                                                         {photo.description ?? "Set Caption"}
                                                     </p>
@@ -200,6 +252,68 @@ export const TripDetail: React.FC<TripDetailProps> = ({
                     </div>
                 </div>
             </div>
+
+            {/* Fullscreen Modal (Copied and adapted from PhotoGallery) */}
+            {selectedImage && (
+                <div className="fixed inset-0 z-50 bg-black/[0.95] flex items-center justify-center p-4">
+                    {/* Close button */}
+                    <button
+                        onClick={closeFullscreen}
+                        className="absolute top-4 right-4 z-10 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors duration-200"
+                        aria-label="Close fullscreen view"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+
+                    {/* Navigation buttons */}
+                    {trip.photos.length > 1 && (
+                        <>
+                            <button
+                                onClick={() => navigateFullscreen('prev')}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-colors duration-200"
+                                aria-label="Previous image"
+                            >
+                                <ChevronLeft className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={() => navigateFullscreen('next')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/20 text-white rounded-full p-3 transition-colors duration-200"
+                                aria-label="Next image"
+                            >
+                                <ChevronRight className="w-6 h-6" />
+                            </button>
+                        </>
+                    )}
+
+                    {/* Modal content */}
+                    <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
+                        <img
+                            src={selectedImage.publicUrl} // Use publicUrl for Photo type
+                            alt={selectedImage.description ?? "Trip photo"} // Use description for Photo type
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                        />
+
+                        {/* Image caption */}
+                        {selectedImage.description && (
+                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg">
+                                {selectedImage.description}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Click outside to close */}
+                    <div
+                        className="absolute inset-0 -z-10"
+                        onClick={closeFullscreen}
+                        aria-label="Click to close"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e: React.KeyboardEvent) => {
+                            if (e.key === 'Escape') closeFullscreen();
+                        }}
+                    />
+                </div>
+            )}
         </div>
     );
 };

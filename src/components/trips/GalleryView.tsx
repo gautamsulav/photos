@@ -59,7 +59,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                     >
                         <div className="relative h-64 rounded-xl overflow-hidden shadow-lg">
                             <img
-                                src={trip.photos.length ? 'http://localhost:8080/files/' + trip.photos[0].filename : ''}
+                                src={trip.thumbnail ? trip.thumbnail.publicUrl : ''}
                                 alt={trip.name}
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             />
@@ -80,7 +80,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({
                                 <h3 className="font-semibold text-lg mb-1">{trip.name}</h3>
                                 <div className="flex items-center gap-2 text-sm opacity-90 mb-2">
                                     <MapPin size={14}/>
-                                    {trip.location}
+                                    {trip.city + ', ' + trip.country}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm opacity-90">
                                     <Calendar size={14}/>
