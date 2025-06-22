@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
+import {TanStackRouterDevtools} from "@tanstack/react-router-devtools";
 
 export const Route = createRootRoute({
     component: () => (
@@ -15,7 +16,7 @@ export const Route = createRootRoute({
                         padding: '0.5rem 1rem',
                         textDecoration: 'none',
                         color: '#0066cc',
-                        border: '1px solid #0066cc',
+
                         borderRadius: '4px'
                     }}
                 >
@@ -27,16 +28,28 @@ export const Route = createRootRoute({
                         padding: '0.5rem 1rem',
                         textDecoration: 'none',
                         color: '#0066cc',
-                        border: '1px solid #0066cc',
                         borderRadius: '4px'
                     }}
                 >
                     Photo Gallery
                 </Link>
+                <Link
+                    to="/trip-manager"
+                    style={{
+                        padding: '0.5rem 1rem',
+                        textDecoration: 'none',
+                        color: '#0066cc',
+
+                        borderRadius: '4px'
+                    }}
+                >
+                    Trip Manager
+                </Link>
             </nav>
             <main style={{ padding: '1rem' }}>
                 <Outlet />
             </main>
+            <TanStackRouterDevtools />
         </div>
     ),
 })

@@ -11,11 +11,18 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TripManagerImport } from './routes/trip-manager'
 import { Route as TripManagementImport } from './routes/trip-management'
 import { Route as PhotoGalleryImport } from './routes/photo-gallery'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const TripManagerRoute = TripManagerImport.update({
+  id: '/trip-manager',
+  path: '/trip-manager',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const TripManagementRoute = TripManagementImport.update({
   id: '/trip-management',
@@ -60,6 +67,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripManagementImport
       parentRoute: typeof rootRoute
     }
+    '/trip-manager': {
+      id: '/trip-manager'
+      path: '/trip-manager'
+      fullPath: '/trip-manager'
+      preLoaderRoute: typeof TripManagerImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -69,12 +83,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/photo-gallery': typeof PhotoGalleryRoute
   '/trip-management': typeof TripManagementRoute
+  '/trip-manager': typeof TripManagerRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/photo-gallery': typeof PhotoGalleryRoute
   '/trip-management': typeof TripManagementRoute
+  '/trip-manager': typeof TripManagerRoute
 }
 
 export interface FileRoutesById {
@@ -82,14 +98,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/photo-gallery': typeof PhotoGalleryRoute
   '/trip-management': typeof TripManagementRoute
+  '/trip-manager': typeof TripManagerRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/photo-gallery' | '/trip-management'
+  fullPaths: '/' | '/photo-gallery' | '/trip-management' | '/trip-manager'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/photo-gallery' | '/trip-management'
-  id: '__root__' | '/' | '/photo-gallery' | '/trip-management'
+  to: '/' | '/photo-gallery' | '/trip-management' | '/trip-manager'
+  id: '__root__' | '/' | '/photo-gallery' | '/trip-management' | '/trip-manager'
   fileRoutesById: FileRoutesById
 }
 
@@ -97,12 +114,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PhotoGalleryRoute: typeof PhotoGalleryRoute
   TripManagementRoute: typeof TripManagementRoute
+  TripManagerRoute: typeof TripManagerRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PhotoGalleryRoute: PhotoGalleryRoute,
   TripManagementRoute: TripManagementRoute,
+  TripManagerRoute: TripManagerRoute,
 }
 
 export const routeTree = rootRoute
@@ -117,7 +136,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/photo-gallery",
-        "/trip-management"
+        "/trip-management",
+        "/trip-manager"
       ]
     },
     "/": {
@@ -128,6 +148,9 @@ export const routeTree = rootRoute
     },
     "/trip-management": {
       "filePath": "trip-management.tsx"
+    },
+    "/trip-manager": {
+      "filePath": "trip-manager.tsx"
     }
   }
 }
